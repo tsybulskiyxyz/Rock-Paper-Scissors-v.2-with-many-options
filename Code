@@ -1,0 +1,168 @@
+import java.io.FileNotFoundException;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.Scanner;
+import java.io.File;
+
+public class RockPaperScissors {
+    public static void main(String[] args) {
+        Player player = new Player();
+        Game game = new Game();
+        start(player, game);
+        run(userInput(), player, game);
+    }
+
+    public static void start(Player player, Game game) {
+        System.out.print("Enter your name: ");
+        player.setName(userInput());
+        initialRating(player);
+        System.out.print("""
+                Hello, %s
+                Enter the options you would like to play with:
+                """.formatted(player.getName()));
+        game.setOptions(userInput().split(","));
+        if (game.getOptions()[0].equals("")) {
+            game.setOptions(new String[]{"rock", "paper", "scissors"});
+        }
+        System.out.println("Okay, let's start");
+        System.out.print("""
+                Choose your option for playing game vs computer.
+                You also can use command "!exit" to exit or "!rating" to see your rating.
+                """);
+    }
+
+    public static String userInput() {
+        Scanner scanner = new Scanner(System.in);
+        return scanner.nextLine();
+    }
+
+    public static void initialRating(Player player) {
+        player.setRating(0);
+        for (int i = 0; i < fileData().length; i++) {
+            if (player.getName().equals(fileData()[i])) {
+                player.setRating(Integer.parseInt(fileData()[i + 1]));
+            }
+        }
+    }
+
+    public static String[] fileData() {
+        String[] fileData = new String[6];
+        File file = new File("rating.txt");
+        try (Scanner scanner = new Scanner(file)) {
+            while (scanner.hasNext()) {
+                for (int i = 0; i < fileData.length; i++) {
+                    fileData[i] = scanner.next();
+                }
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found");
+        }
+        return fileData;
+    }
+
+    public static void run(String userInput, Player player, Game game) {
+        while (!userInput.equals("!exit")) {
+            if (rightInput(userInput, game)) {
+                System.out.println(gameInfo(userInput, choiceOfAI(game), player, game));
+            } else if (userInput.equals("!rating")) {
+                System.out.println(player.getRating());
+                System.out.print("""
+                        Choose your option for playing game vs computer.
+                        You also can use command "!exit" to exit or "!rating" to see your rating.
+                        """);
+            } else {
+                System.out.println("Invalid input");
+            }
+            userInput = userInput();
+        }
+        System.out.println("Bye!");
+    }
+
+    public static boolean rightInput(String userInput, Game game) {
+        boolean rightInput = false;
+        for (String option : game.getOptions()) {
+            if (userInput.equals(option)) {
+                rightInput = true;
+            }
+        }
+        return rightInput;
+    }
+
+    public static String gameInfo(String userInput, String choiceOfAI, Player player, Game game) {
+        String gameInfo = null;
+        if (userInput.equals(choiceOfAI)) {
+            gameInfo = "There is a draw (" + userInput + ")";
+            player.setRating(player.getRating() + 50);
+        } else if (checkWin(userInput, choiceOfAI, game)) {
+            gameInfo = "Well done. The computer chose " + choiceOfAI + " and failed";
+            player.setRating(player.getRating() + 100);
+
+        } else {
+            gameInfo = "Sorry, but the computer chose " + choiceOfAI;
+        }
+        return gameInfo;
+    }
+
+    public static boolean checkWin(String userInput, String choiceOfAI, Game game) {
+        boolean checkWin = true;
+        for (int i = 0; i < game.getOptionsLength(); i++) {
+            for (int j = 1; j <= (game.getOptionsLength() / 2); j++) {
+                try {
+                    if (userInput.equals(game.getOptions()[i]) && choiceOfAI.equals(game.getOptions()[i + j])) {
+                        checkWin = false;
+                    }
+                } catch (IndexOutOfBoundsException e) {
+                    for (int k = 0; k < j; k++) {
+                        if (userInput.equals(game.getOptions()[i]) && choiceOfAI.equals(game.getOptions()[k])) {
+                            checkWin = false;
+                        }
+                    }
+                }
+            }
+        }
+        return checkWin;
+    }
+
+    public static String choiceOfAI(Game game) {
+        Random random = new Random();
+        int numberOfOption = random.nextInt(game.getOptionsLength());
+        return game.getOptions()[numberOfOption];
+    }
+}
+
+class Player {
+    String name;
+    int rating;
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+}
+
+class Game {
+    String[] options;
+
+    public void setOptions(String[] options) {
+        this.options = options;
+    }
+
+    public String[] getOptions() {
+        return options;
+    }
+
+    public int getOptionsLength() {
+        return options.length;
+    }
+}
