@@ -83,6 +83,7 @@ public class RockPaperScissors {
         for (String option : game.getOptions()) {
             if (userInput.equals(option)) {
                 rightInput = true;
+                break;
             }
         }
         return rightInput;
